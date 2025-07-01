@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Kurumsal İş Takip Platformu</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <header>
+        <div id="logo"><i class="fas fa-tasks"></i> İş Takip Platformu</div>
+        <div class="header-right">
+            <div id="login-buttons">
+                <button id="google" onclick="window.open('https://google.com','_blank')"><i class="fab fa-google"></i> Google</button>
+                <button id="tcmb-login" onclick="window.open('https://www.tcmb.gov.tr','_blank')"><i class="fas fa-landmark"></i> TCMB</button>
+            </div>
+            <button id="mode-toggle-btn" aria-label="Gece/Gündüz Modu"></button>
+        </div>
+    </header>
+
+    <main id="app-section">
+
+        <div class="card">
+            <div class="dashboard-grid">
+                <div class="stat-card">
+                    <h4>Toplam İş Adedi</h4>
+                    <p id="stat-total-jobs">0</p>
+                    <i class="fas fa-briefcase"></i>
+                </div>
+                <div class="stat-card">
+                    <h4>Bu Ay En Çok İş Girilen Firma (Adet)</h4>
+                    <p id="stat-top-company-by-count">-</p>
+                    <i class="fas fa-building-flag"></i>
+                </div>
+                <div class="stat-card">
+                    <h4>Bu Ay En Yüksek Tutarli Firma (Ciro)</h4>
+                    <p id="stat-top-company-by-value">-</p>
+                    <i class="fas fa-hand-holding-dollar"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-pencil-alt"></i> Veri Girişi</h3>
+            <input type="text" id="firm-name" placeholder="Firma İsmi" list="firmNames" />
+            <datalist id="firmNames"></datalist>
+            <input type="text" id="work-description" placeholder="Yapılan İş Açıklaması" list="workDescriptions" />
+            <datalist id="workDescriptions"></datalist>
+            <div class="form-row">
+                <input type="number" id="amount" placeholder="Fiyat" step="0.01" />
+                <select id="currency">
+                    <option value="TL">TL</option>
+                    <option value="USD">USD</option>
+                    <option value="EUR">EUR</option>
+                </select>
+            </div>
+            <input type="text" id="program-name" placeholder="Program İsmi" />
+            <div class="checkbox-container">
+                <h4>İşlem Türleri</h4>
+                <label><input type="checkbox" name="islem" value="lazer" /><span class="checkmark"></span> Lazer Kesim</label>
+                <label><input type="checkbox" name="islem" value="bukum" /><span class="checkmark"></span> Büküm</label>
+                <label><input type="checkbox" name="islem" value="kaynak" /><span class="checkmark"></span> Kaynak</label>
+                <label><input type="checkbox" name="islem" value="makas" /><span class="checkmark"></span> Makas</label>
+                <label><input type="checkbox" name="islem" value="plazma" /><span class="checkmark"></span> Plazma</label>
+            </div>
+            <div class="button-group">
+                <button id="submit-button" onclick="addData()"><i class="fas fa-plus-circle"></i> Veri Girişi</button>
+                <button id="save-and-new-button" onclick="addDataAndNew()" class="secondary-button"><i class="fas fa-save"></i> Kaydet ve Yeni</button>
+                <button id="export-button" onclick="exportToCSV()"><i class="fas fa-file-csv"></i> Dışarı Aktar</button>
+                <button id="import-button" onclick="document.getElementById('csv-file-input').click()"><i class="fas fa-file-upload"></i> İçeri Aktar</button>
+                <input type="file" id="csv-file-input" accept=".csv" style="display:none;" onchange="importCSV(event)" />
+                <button id="clear-btn" onclick="verifyPIN()"><i class="fas fa-trash"></i> Tüm Verileri Sil</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="totals-container">
+                <div id="total-amounts" class="total-box">
+                    <h3><i class="fas fa-globe"></i> Genel Toplam</h3>
+                    <p>USD: <span id="total-usd">0</span></p>
+                    <p>TL: <span id="total-tl">0</span></p>
+                    <p>EUR: <span id="total-eur">0</span></p>
+                </div>
+                <div id="today-totals" class="total-box">
+                    <h3><i class="fas fa-calendar-day"></i> Bugün Girilenler</h3>
+                    <p>USD: <span id="today-usd">0</span></p>
+                    <p>TL: <span id="today-tl">0</span></p>
+                    <p>EUR: <span id="today-eur">0</span></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3><i class="fas fa-clipboard-list"></i> Yapılan İşler</h3>
+            <div id="search-filters">
+                <input type="text" id="filter-firm" oninput="filterTable()" placeholder="Firma veya Program Adı Ara..." />
+                <input type="date" id="search-start-date" onchange="filterTable()" />
+                <input type="date" id="search-end-date" onchange="filterTable()" />
+                <select id="sort-by" onchange="sortTable()">
+                    <option value="date-desc">Tarihe Göre (Yeni)</option>
+                    <option value="date-asc">Tarihe Göre (Eski)</option>
+                    <option value="firm">Firmaya Göre</option>
+                    <option value="program">Programa Göre</option>
+                </select>
+            </div>
+            <div id="quick-filters" class="button-group" style="justify-content: flex-start; margin-top: 0; margin-bottom: 20px;">
+                <button onclick="setFilterToThisMonth()">Bu Ay</button>
+                <button onclick="setFilterToLastMonth()">Geçen Ay</button>
+                <button onclick="setFilterToThisYear()">Bu Yıl</button>
+                <button onclick="clearDateFilters()">Filtreyi Temizle</button>
+            </div>
+            <div id="work-table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Tarih</th>
+                            <th>Yapılan İş</th>
+                            <th>Firma</th>
+                            <th>Fiyat</th>
+                            <th>Firma Toplam</th>
+                            <th>Program</th>
+                            <th>Durum <input type="checkbox" id="toggle-all-status" title="Görünen Tümünü İşaretle/Kaldır"></th>
+                            <th>İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody id="work-table-body"></tbody>
+                </table>
+            </div>
+            <div id="pagination-controls">
+                <button id="first-page-btn" onclick="goToFirstPage()"><i class="fas fa-angle-double-left"></i> İlk</button>
+                <button id="prev-page-btn" onclick="prevPage()"><i class="fas fa-angle-left"></i> Önceki</button>
+                <span id="page-info"></span>
+                <input type="number" id="page-input" placeholder="Sayfa...">
+                <button id="page-go-btn" onclick="goToPage()">Git</button>
+                <button id="next-page-btn" onclick="nextPage()">Sonraki <i class="fas fa-angle-right"></i></button>
+                <button id="last-page-btn" onclick="goToLastPage()">Son <i class="fas fa-angle-double-right"></i></button>
+            </div>
+        </div>
+        
+        <div class="card">
+            <h3><i class="fas fa-history"></i> Firmaların Son Veri Giriş Zamanı</h3>
+            <div id="company-last-entry-container">
+                <div id="company-last-entry"></div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="charts-container">
+                <div class="chart-wrapper">
+                    <h3><i class="fas fa-chart-bar"></i> Firma Performansı (TL)</h3>
+                    <div id="firm-performance-container">
+                        <canvas id="firm-performance-chart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-wrapper">
+                    <h3><i class="fas fa-chart-pie"></i> Firma Ciro Payları</h3>
+                    <div id="firm-revenue-share-container">
+                        <canvas id="firm-revenue-share-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div id="currency-totals" class="currency-totals"></div>
+        </div>
+    </main>
+
+    <footer>
+        <p>© 2025 İstanbul Teknik Lazer Gökberk. Tüm hakları saklıdır.</p>
+        <p>
+            <a href="#">Gizlilik Politikası</a> |
+            <a href="#">Kullanım Koşulları</a> |
+            <a href="#">İletişim</a>
+        </p>
+    </footer>
+
+    <button id="scroll-to-top" title="Yukarı Çık"><i class="fas fa-arrow-up"></i></button>
+
+    <div id="toast" class="toast"></div>
+    <div id="loader-overlay" class="loader-overlay"><div class="loader"></div></div>
+    <div id="modal-overlay" class="modal-overlay"></div>
+    <div id="company-details-modal" class="modal"><button class="close-btn" onclick="closeCompanyDetails()">&times;</button><div id="company-details-content"></div></div>
+    <div id="job-details-modal" class="modal"><button class="close-btn" onclick="closeJobDetails()">&times;</button><div id="job-details-content"></div></div>
+    <div id="confirmation-modal" class="modal">
+        <div class="modal-content">
+            <p id="confirmation-message">Bu işlemi yapmak istediğinize emin misiniz?</p>
+            <div class="button-group">
+                <button id="confirm-yes" class="confirm-btn-yes"><i class="fas fa-check"></i> Onayla</button>
+                <button id="confirm-no" class="confirm-btn-no"><i class="fas fa-times"></i> İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
